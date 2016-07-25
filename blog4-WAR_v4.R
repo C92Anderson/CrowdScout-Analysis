@@ -268,6 +268,16 @@ rf.cross.v10 <- function(input, model.vars, label.vars) {
   # var importance
   var.imp <- varImp(model, scale=FALSE)
   
+  #partial dependency
+  imp <- importance(model)
+  impvar <- rownames(imp)[order(imp[, 1], decreasing=TRUE)]
+  op <- par(mfrow=c(2, 3))
+  pd <- for (i in seq_along(impvar)) {
+    partialPlot(model, input.model, impvar[i], xlab=impvar[i],
+                main=paste("Partial Dependence on", impvar[i]),
+                ylim=c(30, 70))
+  }
+  par(op)
   return(list(cbind(predictions,input.cc),model, var.imp))
   
 }
@@ -349,4 +359,19 @@ ggplot(data=player.resids, aes(x=RF.Residuals,y=GLM.Residuals, color=score, labe
 annotate("text", x = 0, y = -50, hjust=0, label = "@CrowdScoutSprts") +
   stat_smooth_func(geom="text",method="lm",hjust=0.6,parse=TRUE)
 
+######################
+#####partial dependencies
+######################
 
+set.seed(131)
+cs.rf <- randomForest(score ~ TOI.Gm + GF60 + GA60 + CF60 + CA60 + 
+                    OppCA60 + TMCA60 + CF60.RelTM + OZFO. + iFirstA.60 + iGoals.60, player.data, importance=TRUE)
+#partial dependency
+imp <- importance(cs.rf)
+impvar <- rownames(imp)[order(imp[, 1], decreasing=TRUE)]
+op <- par(mfrow=c(2, 3))
+for (i in seq_along(impvar)) {
+  partialPlot(cs.rf, player.data, impvar[i], xlab=impvar[i],
+              main=paste("Partial Dependence on", impvar[i]))
+}
+par(op)
